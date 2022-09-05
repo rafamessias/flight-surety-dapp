@@ -1,6 +1,6 @@
-# New Dapp scaffolding
+# Flight Surety Dapp 
 
-This is a simple scaffolding.
+This Dapp is part of my journey to build a very solid Blockchain development skill
 
 ### Tech used
 
