@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function NavMenu({ items, action, menuSelected, className }) {
   return (
-    <ul className={className}>
+    <ul className={`${className} items-center w-full`}>
       {items.map((item) => (
         <li key={item.id}>
           <Link href={item.url} passHref>
@@ -16,6 +16,11 @@ export default function NavMenu({ items, action, menuSelected, className }) {
           </Link>
         </li>
       ))}
+      <li className="sm:grow sm:flex sm:justify-end">
+        <button className="py-1 px-2 rounded bg-indigo-500 hover:bg-indigo-600 text-white">
+          Connect Wallet
+        </button>
+      </li>
     </ul>
   );
 }
