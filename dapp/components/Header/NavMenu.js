@@ -16,8 +16,8 @@ export default function NavMenu({ items, action, menuSelected, className }) {
           </Link>
         </li>
       ))}
-      <li className="sm:grow sm:flex sm:justify-end">
-        <button className="py-1 px-2 rounded bg-indigo-500 hover:bg-indigo-600 text-white">
+      <li className="sm:grow sm:flex sm:justify-end ml-2 ">
+        <button className="py-1 px-2 rounded bg-indigo-500 hover:bg-indigo-600 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
           Connect Wallet
         </button>
       </li>

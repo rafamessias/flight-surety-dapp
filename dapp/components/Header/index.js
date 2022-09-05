@@ -15,6 +15,11 @@ const items = [
   },
   {
     id: 1,
+    label: "Flights",
+    url: "/flights",
+  },
+  {
+    id: 2,
     label: "Customer",
     url: "/customer",
   },

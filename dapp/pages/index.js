@@ -1,9 +1,12 @@
+import AdminAirlines from "components/Pages/AdminAirlines";
+import AdminOracles from "components/Pages/AdminOracles";
 import Tabs from "components/Tabs";
+import { useState } from "react";
 
 const items = [
   {
     id: 0,
-    label: "Airline",
+    label: "Airlines",
   },
   {
     id: 1,
@@ -12,9 +15,12 @@ const items = [
 ];
 
 export default function Home() {
+  const [btnSelected, setBtnSelected] = useState(0);
   return (
-    <Tabs items={items}>
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
+    <Tabs items={items} tabsSelected={[btnSelected, setBtnSelected]}>
+      {btnSelected === 0 && <AdminAirlines />}
+
+      {btnSelected === 1 && <AdminOracles />}
     </Tabs>
   );
 }

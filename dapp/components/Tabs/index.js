@@ -1,7 +1,5 @@
-import { useState } from "react";
-
-export default function Tabs({ children, items }) {
-  const [btnSelected, setBtnSelected] = useState(0);
+export default function Tabs({ children, items, tabsSelected }) {
+  const [btnSelected, setBtnSelected] = tabsSelected;
 
   return (
     <>
@@ -12,7 +10,7 @@ export default function Tabs({ children, items }) {
             onClick={() => setBtnSelected(item.id)}
             className={`h-8 px-5 rounded hover:shadow hover:bg-indigo-50 hover:text-indigo-500 ${
               btnSelected === item.id
-                ? "bg-indigo-50 text-indigo-500"
+                ? "bg-indigo-100 text-indigo-500"
                 : "text-slate-500"
             }`}>
             {item.label}
