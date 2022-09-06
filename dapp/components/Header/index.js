@@ -39,7 +39,7 @@ export default function Header() {
 
     setMenuSelected(page.id);
     setCurrentPage(page);
-  }, [router]);
+  }, [router, setCurrentPage]);
 
   const selectPage = (page) => {
     setMenuSelected(page.id);

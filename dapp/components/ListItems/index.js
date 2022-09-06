@@ -5,7 +5,9 @@ export default function ListItems({ items = [], title }) {
       <ul className="space-y-1 text-sm text-slate-500">
         {items.map((item) => (
           <li key={item.id}>
-            <span className="inline-block font-bold w-6">{item.id}</span>
+            <span className="inline-block font-bold w-6 min-w-fit">
+              {item.id}
+            </span>
             <span className="ml-2">{item.label}</span>
           </li>
         ))}
