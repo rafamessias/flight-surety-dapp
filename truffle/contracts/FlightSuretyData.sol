@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.14;
 
 contract FlightSuretyData {
     /********************************************************************************************/
@@ -8,6 +8,17 @@ contract FlightSuretyData {
 
     address private contractOwner; // Account used to deploy contract
     bool private operational = true; // Blocks all state changes throughout the contract if false
+
+    mapping(address => bool) private authorizedCallers; //who can call this contract
+
+    //airline register
+    struct Airline {
+        string name;
+        bool active;
+        uint256 funds;
+    }
+
+    mapping(address => Airline) private airlines;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -25,9 +36,6 @@ contract FlightSuretyData {
     /*                                       FUNCTION MODIFIERS                                 */
     /********************************************************************************************/
 
-    // Modifiers help avoid duplication of code. They are typically used to validate something
-    // before a function is allowed to be executed.
-
     /**
      * @dev Modifier that requires the "operational" boolean variable to be "true"
      *      This is used on all state changing functions to pause the contract in
@@ -43,6 +51,25 @@ contract FlightSuretyData {
      */
     modifier requireContractOwner() {
         require(msg.sender == contractOwner, "Caller is not contract owner");
+        _;
+    }
+
+    /**
+     * @dev Requires a valid address
+     */
+    modifier requireValidAddress(address _address) {
+        require(_address != address(0), "Address should be a valid one");
+        _;
+    }
+
+    /**
+     * @dev require to be an authirized caller
+     */
+    modifier requireAuthorizedCaller() {
+        require(
+            authorizedCallers[msg.sender] == true,
+            "Only Authorized callers can do this action"
+        );
         _;
     }
 
@@ -68,6 +95,31 @@ contract FlightSuretyData {
         operational = mode;
     }
 
+    /**
+     * @dev sets the authorized callers to this contract
+     *
+     * Calling this function to add authorized callers
+     */
+
+    function authorizeCaller(address _address)
+        external
+        requireContractOwner
+        requireValidAddress(_address)
+    {
+        authorizedCallers[_address] = true;
+    }
+
+    /**
+     * @dev deny access to a specific caller
+     */
+    function denyCaller(address _address)
+        external
+        requireContractOwner
+        requireValidAddress(_address)
+    {
+        authorizedCallers[_address] = false;
+    }
+
     /********************************************************************************************/
     /*                                     SMART CONTRACT FUNCTIONS                             */
     /********************************************************************************************/
@@ -77,7 +129,25 @@ contract FlightSuretyData {
      *      Can only be called from FlightSuretyApp contract
      *
      */
-    function registerAirline() external pure {}
+    function registerAirline(address _address, string calldata name)
+        external
+        payable
+        requireValidAddress(_address)
+        requireAuthorizedCaller
+        returns (bool success, uint256 votes)
+    {
+        airlines[_address].name = name;
+
+        if (msg.value >= 1 ether) {
+            airlines[_address].active = true;
+            airlines[_address].funds = msg.value;
+        } else {
+            airlines[_address].active = false;
+            airlines[_address].funds = 0;
+        }
+
+        return (true, 0);
+    }
 
     /**
      * @dev Buy insurance for a flight
@@ -101,7 +171,19 @@ contract FlightSuretyData {
      *      resulting in insurance payouts, the contract should be self-sustaining
      *
      */
-    function fund() public payable {}
+    function fund()
+        public
+        payable
+        requireValidAddress(msg.sender)
+        requireAuthorizedCaller
+    {
+        if (airlines[msg.sender].active == true) {
+            airlines[msg.sender].funds += msg.value;
+        } else if (msg.value >= 1 ether) {
+            airlines[msg.sender].active = true;
+            airlines[msg.sender].funds = msg.value;
+        }
+    }
 
     function getFlightKey(
         address airline,

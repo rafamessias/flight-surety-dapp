@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.14;
+
+//Define Contract Data Interface
+
+interface IFlightSuretyData {
+    function isOperational() external view returns (bool);
+
+    function registerAirline(address _address, string calldata name)
+        external
+        payable
+        returns (bool success, uint256 votes);
+}
 
 /************************************************** */
 /* FlightSurety Smart Contract                      */
@@ -18,6 +29,8 @@ contract FlightSuretyApp {
     uint8 private constant STATUS_CODE_LATE_OTHER = 50;
 
     address private contractOwner; // Account used to deploy contract
+
+    IFlightSuretyData private flightSuretyData;
 
     struct Flight {
         bool isRegistered;
@@ -38,8 +51,11 @@ contract FlightSuretyApp {
      */
     modifier requireIsOperational() {
         // Modify to call data contract's status
-        require(true, "Contract is currently not operational");
-        _; // All modifiers require an "_" which indicates where the function body will be added
+        require(
+            flightSuretyData.isOperational() == true,
+            "Contract is currently not operational"
+        );
+        _;
     }
 
     /**
@@ -58,16 +74,17 @@ contract FlightSuretyApp {
      * @dev Contract constructor
      *
      */
-    constructor() {
+    constructor(address _flightSuretyData) {
         contractOwner = msg.sender;
+        flightSuretyData = IFlightSuretyData(_flightSuretyData);
     }
 
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
 
-    function isOperational() public pure returns (bool) {
-        return true; // Modify to call data contract's status
+    function isOperational() public view returns (bool) {
+        return flightSuretyData.isOperational(); // Modify to call data contract's status
     }
 
     /********************************************************************************************/
@@ -78,12 +95,12 @@ contract FlightSuretyApp {
      * @dev Add an airline to the registration queue
      *
      */
-    function registerAirline()
+    function registerAirline(address _address, string calldata name)
         external
-        pure
+        payable
         returns (bool success, uint256 votes)
     {
-        return (success, 0);
+        return flightSuretyData.registerAirline(_address, name);
     }
 
     /**
@@ -122,7 +139,9 @@ contract FlightSuretyApp {
         emit OracleRequest(index, airline, flight, timestamp);
     }
 
-    // region ORACLE MANAGEMENT
+    /********************************************************************************************/
+    /*                               region ORACLE MANAGEMENT
+    /********************************************************************************************/
 
     // Incremented to add pseudo-randomness at various points
     uint8 private nonce = 0;
