@@ -35,31 +35,54 @@ contract("Flight Surety Tests", async (accounts) => {
 
   it("(airline) can register an Airline using registerAirline()", async () => {
     // ARRANGE
-    let newAirline = accounts[2];
-    let result;
+    const newAirline = accounts[2];
     // ACT
     try {
-      result = await config.flightSuretyApp.registerAirline(
+      await config.flightSuretyApp.registerAirline.sendTransaction(
         newAirline,
         "Delta Airlines",
         {
           from: config.firstAirline,
         }
       );
-    } catch (e) {}
-    //let result = await config.flightSuretyData.isAirline.call(newAirline);
-    console.log(result);
+    } catch (e) {
+      console.log(e);
+    }
+    const result = await config.flightSuretyApp.getAirline.call(newAirline);
+
     // ASSERT
     assert.equal(
       result[0],
-      true,
-      "Airline should not be able to register another airline if it hasn't provided funding"
+      "Delta Airlines",
+      "Airline should be registered and waiting to provide funding"
+    );
+  });
+
+  it("(airline) Validate Arline fund", async () => {
+    // ARRANGE
+    const newAirline = accounts[2];
+    // ACT
+    try {
+      await config.flightSuretyApp.airlineFund.sendTransaction({
+        from: newAirline,
+        value: web3.utils.toWei("2", "ether"),
+      });
+    } catch (e) {
+      console.log(e);
+    }
+    const result = await config.flightSuretyApp.getAirline.call(newAirline);
+
+    // ASSERT
+    assert.equal(
+      result[2].toString(),
+      "2000000000000000000",
+      "Airline should be funded and waiting to be approved"
     );
   });
 
   // it(`(multiparty) can allow access to setOperatingStatus() for Contract Owner account`, async function () {
   //   // Ensure that access is allowed for Contract Owner account
-  //   let accessDenied = false;
+  //   const accessDenied = false;
   //   try {
   //     await config.flightSuretyData.setOperatingStatus(false);
   //   } catch (e) {

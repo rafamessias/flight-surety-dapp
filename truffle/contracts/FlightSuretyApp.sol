@@ -10,6 +10,18 @@ interface IFlightSuretyData {
         external
         payable
         returns (bool success, uint256 votes);
+
+    function getAirline(address _address)
+        external
+        view
+        returns (
+            string memory name,
+            uint8 status,
+            uint256 funds,
+            uint8 votes
+        );
+
+    function fund(address _address) external payable;
 }
 
 /************************************************** */
@@ -20,25 +32,9 @@ contract FlightSuretyApp {
     /*                                       DATA VARIABLES                                     */
     /********************************************************************************************/
 
-    // Flight status codees
-    uint8 private constant STATUS_CODE_UNKNOWN = 0;
-    uint8 private constant STATUS_CODE_ON_TIME = 10;
-    uint8 private constant STATUS_CODE_LATE_AIRLINE = 20;
-    uint8 private constant STATUS_CODE_LATE_WEATHER = 30;
-    uint8 private constant STATUS_CODE_LATE_TECHNICAL = 40;
-    uint8 private constant STATUS_CODE_LATE_OTHER = 50;
-
     address private contractOwner; // Account used to deploy contract
 
     IFlightSuretyData private flightSuretyData;
-
-    struct Flight {
-        bool isRegistered;
-        uint8 statusCode;
-        uint256 updatedTimestamp;
-        address airline;
-    }
-    mapping(bytes32 => Flight) private flights;
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -76,7 +72,7 @@ contract FlightSuretyApp {
      */
     constructor(address _flightSuretyData) {
         contractOwner = msg.sender;
-        flightSuretyData = IFlightSuretyData(_flightSuretyData);
+        flightSuretyData = IFlightSuretyData(payable(_flightSuretyData));
     }
 
     /********************************************************************************************/
@@ -101,6 +97,23 @@ contract FlightSuretyApp {
         returns (bool success, uint256 votes)
     {
         return flightSuretyData.registerAirline(_address, name);
+    }
+
+    function airlineFund() external payable {
+        flightSuretyData.fund{value: msg.value}(msg.sender);
+    }
+
+    function getAirline(address _address)
+        external
+        view
+        returns (
+            string memory name,
+            uint8 status,
+            uint256 funds,
+            uint8 votes
+        )
+    {
+        return flightSuretyData.getAirline(_address);
     }
 
     /**

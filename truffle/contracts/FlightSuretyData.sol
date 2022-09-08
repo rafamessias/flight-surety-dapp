@@ -11,14 +11,41 @@ contract FlightSuretyData {
 
     mapping(address => bool) private authorizedCallers; //who can call this contract
 
+    enum AirlineStatus {
+        Registered,
+        Funded,
+        Approved,
+        Rejected
+    }
+    AirlineStatus constant defaultChoice = AirlineStatus.Registered;
+
     //airline register
     struct Airline {
         string name;
-        bool active;
+        AirlineStatus status;
         uint256 funds;
+        uint8 votes;
     }
 
     mapping(address => Airline) private airlines;
+
+    // Flights
+
+    struct Flight {
+        bool isRegistered;
+        uint8 statusCode;
+        uint256 updatedTimestamp;
+        address airline;
+    }
+    mapping(bytes32 => Flight) private flights;
+
+    // Flight status codees
+    uint8 private constant STATUS_CODE_UNKNOWN = 0;
+    uint8 private constant STATUS_CODE_ON_TIME = 10;
+    uint8 private constant STATUS_CODE_LATE_AIRLINE = 20;
+    uint8 private constant STATUS_CODE_LATE_WEATHER = 30;
+    uint8 private constant STATUS_CODE_LATE_TECHNICAL = 40;
+    uint8 private constant STATUS_CODE_LATE_OTHER = 50;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -134,19 +161,36 @@ contract FlightSuretyData {
         payable
         requireValidAddress(_address)
         requireAuthorizedCaller
-        returns (bool success, uint256 votes)
+        returns (bool success, uint8 votes)
     {
         airlines[_address].name = name;
-
-        if (msg.value >= 1 ether) {
-            airlines[_address].active = true;
-            airlines[_address].funds = msg.value;
-        } else {
-            airlines[_address].active = false;
-            airlines[_address].funds = 0;
-        }
+        airlines[_address].funds = 0;
+        airlines[_address].votes = 0;
 
         return (true, 0);
+    }
+
+    /**
+    @dev return airline info
+     */
+    function getAirline(address _address)
+        external
+        view
+        requireValidAddress(_address)
+        requireAuthorizedCaller
+        returns (
+            string memory name,
+            uint8 status,
+            uint256 funds,
+            uint8 votes
+        )
+    {
+        return (
+            airlines[_address].name,
+            uint8(airlines[_address].status),
+            airlines[_address].funds,
+            airlines[_address].votes
+        );
     }
 
     /**
@@ -171,17 +215,18 @@ contract FlightSuretyData {
      *      resulting in insurance payouts, the contract should be self-sustaining
      *
      */
-    function fund()
-        public
+    function fund(address _address)
+        external
         payable
-        requireValidAddress(msg.sender)
+        requireValidAddress(_address)
         requireAuthorizedCaller
     {
-        if (airlines[msg.sender].active == true) {
-            airlines[msg.sender].funds += msg.value;
-        } else if (msg.value >= 1 ether) {
-            airlines[msg.sender].active = true;
-            airlines[msg.sender].funds = msg.value;
+        if (
+            airlines[_address].status == AirlineStatus.Registered &&
+            msg.value >= 1 ether
+        ) {
+            airlines[_address].funds = msg.value;
+            airlines[_address].status = AirlineStatus.Funded;
         }
     }
 
@@ -194,18 +239,10 @@ contract FlightSuretyData {
     }
 
     /**
-     * @dev Fallback function for funding smart contract.
-     *
-     */
-    fallback() external payable {
-        fund();
-    }
-
-    /**
      * @dev Receive function for funding smart contract.
      *
      */
-    receive() external payable {
-        fund();
-    }
+    // receive() external payable {
+    //     fund();
+    // }
 }
