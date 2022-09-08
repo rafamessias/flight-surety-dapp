@@ -19,7 +19,7 @@ contract FlightSuretyData {
     }
     AirlineStatus constant defaultChoice = AirlineStatus.Registered;
 
-    //airline register
+    //airline struct
     struct Airline {
         string name;
         AirlineStatus status;
@@ -28,6 +28,8 @@ contract FlightSuretyData {
     }
 
     mapping(address => Airline) private airlines;
+    uint8 private airlineCount;
+    uint8 private multiPartyConsensus = 5;
 
     // Flights
 
@@ -100,6 +102,17 @@ contract FlightSuretyData {
         _;
     }
 
+    /**
+    @dev verify if the airline is in funded status
+     */
+    modifier requireAirlineFundedStatus(address _address) {
+        require(
+            airlines[_address].status == AirlineStatus.Funded,
+            "Airline should be in funded status"
+        );
+        _;
+    }
+
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
@@ -123,6 +136,32 @@ contract FlightSuretyData {
     }
 
     /**
+    Change multi-party consensus parameter
+     */
+    function getMultiPartyConsensus()
+        public
+        view
+        requireContractOwner
+        returns (uint8)
+    {
+        return multiPartyConsensus;
+    }
+
+    /**
+    Change multi-party consensus parameter
+     */
+    function setMultiPartyConsensus(uint8 _consensusCount)
+        external
+        requireContractOwner
+    {
+        require(
+            _consensusCount > 0 && _consensusCount < 10,
+            "Avoid too large number of consensus"
+        );
+        multiPartyConsensus = _consensusCount;
+    }
+
+    /**
      * @dev sets the authorized callers to this contract
      *
      * Calling this function to add authorized callers
@@ -130,6 +169,7 @@ contract FlightSuretyData {
 
     function authorizeCaller(address _address)
         external
+        requireIsOperational
         requireContractOwner
         requireValidAddress(_address)
     {
@@ -141,10 +181,21 @@ contract FlightSuretyData {
      */
     function denyCaller(address _address)
         external
+        requireIsOperational
         requireContractOwner
         requireValidAddress(_address)
     {
         authorizedCallers[_address] = false;
+    }
+
+    function isAirline(address _address)
+        private
+        view
+        requireValidAddress(_address)
+        returns (bool)
+    {
+        bytes memory _name = bytes(airlines[_address].name);
+        return _name.length != 0;
     }
 
     /********************************************************************************************/
@@ -159,6 +210,7 @@ contract FlightSuretyData {
     function registerAirline(address _address, string calldata name)
         external
         payable
+        requireIsOperational
         requireValidAddress(_address)
         requireAuthorizedCaller
         returns (bool success, uint8 votes)
@@ -166,8 +218,36 @@ contract FlightSuretyData {
         airlines[_address].name = name;
         airlines[_address].funds = 0;
         airlines[_address].votes = 0;
+        airlineCount++;
 
         return (true, 0);
+    }
+
+    /**
+    @notice Airline approval function
+     */
+
+    function approveAirlineRegistration(address _address, bool approve)
+        external
+        requireIsOperational
+        requireValidAddress(_address)
+        requireAirlineFundedStatus(_address)
+        requireAuthorizedCaller
+        returns (bool success, uint8 votes)
+    {
+        if (airlineCount > multiPartyConsensus && approve == true) {
+            airlines[_address].votes += 1;
+            return (true, airlines[_address].votes);
+        }
+
+        if (approve == true) {
+            airlines[_address].status = AirlineStatus.Approved;
+            return (true, airlines[_address].votes);
+        }
+
+        if (approve == false) {
+            return (false, airlines[_address].votes);
+        }
     }
 
     /**
@@ -218,16 +298,22 @@ contract FlightSuretyData {
     function fund(address _address)
         external
         payable
+        requireIsOperational
         requireValidAddress(_address)
         requireAuthorizedCaller
     {
-        if (
-            airlines[_address].status == AirlineStatus.Registered &&
-            msg.value >= 1 ether
-        ) {
-            airlines[_address].funds = msg.value;
-            airlines[_address].status = AirlineStatus.Funded;
-        }
+        require(
+            msg.value >= 1 ether,
+            "Airline funds should be 1 ether or more"
+        );
+        require(
+            airlines[_address].status == AirlineStatus.Registered,
+            "Airline should be in registered status in order to receive funds"
+        );
+
+        airlines[_address].funds = msg.value;
+        // if more than 5, it requires multi-party consensus
+        if (airlineCount < 6) airlines[_address].status = AirlineStatus.Funded;
     }
 
     function getFlightKey(

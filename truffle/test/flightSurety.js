@@ -65,7 +65,7 @@ contract("Flight Surety Tests", async (accounts) => {
     try {
       await config.flightSuretyApp.airlineFund.sendTransaction({
         from: newAirline,
-        value: web3.utils.toWei("2", "ether"),
+        value: web3.utils.toWei("1", "ether"),
       });
     } catch (e) {
       console.log(e);
@@ -75,7 +75,28 @@ contract("Flight Surety Tests", async (accounts) => {
     // ASSERT
     assert.equal(
       result[2].toString(),
-      "2000000000000000000",
+      "1000000000000000000",
+      "Airline should be funded and waiting to be approved"
+    );
+  });
+
+  it("(airline) Approve Airline Registration", async () => {
+    // ARRANGE
+    const newAirline = accounts[2];
+    // ACT
+    try {
+      await config.flightSuretyApp.approveAirlineRegistration.sendTransaction(
+        newAirline
+      );
+    } catch (e) {
+      console.log(e);
+    }
+    const result = await config.flightSuretyApp.getAirline.call(newAirline);
+
+    // ASSERT
+    assert.equal(
+      result[1].toString(),
+      "2",
       "Airline should be funded and waiting to be approved"
     );
   });

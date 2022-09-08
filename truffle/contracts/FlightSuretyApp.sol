@@ -22,6 +22,10 @@ interface IFlightSuretyData {
         );
 
     function fund(address _address) external payable;
+
+    function approveAirlineRegistration(address _address, bool approve)
+        external
+        returns (bool success, uint8 votes);
 }
 
 /************************************************** */
@@ -99,8 +103,25 @@ contract FlightSuretyApp {
         return flightSuretyData.registerAirline(_address, name);
     }
 
+    /**
+     * @dev Airline should be able to fund it, before register is approved
+     *
+     */
+
     function airlineFund() external payable {
         flightSuretyData.fund{value: msg.value}(msg.sender);
+    }
+
+    /**
+     * @dev Airline Approval function
+     *
+     */
+
+    function approveAirlineRegistration(address _address)
+        external
+        returns (bool success, uint8 votes)
+    {
+        return flightSuretyData.approveAirlineRegistration(_address, true);
     }
 
     function getAirline(address _address)
