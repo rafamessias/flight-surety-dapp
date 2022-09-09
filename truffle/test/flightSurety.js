@@ -189,4 +189,39 @@ contract("Flight Surety Tests", async (accounts) => {
       "Should have 5 airlines with approved status"
     );
   });
+
+  it("(Flight) Airline can register a flight", async () => {
+    // ARRANGE
+    const newAirline = accounts[2];
+
+    //updatedTimestamp
+    let updatedTimestamp = new Date();
+    updatedTimestamp.setMonth(updatedTimestamp.getDate() + 2);
+    updatedTimestamp = updatedTimestamp.getMilliseconds();
+
+    // ACT
+    try {
+      for (let x = 1; x < 3; x++) {
+        await config.flightSuretyApp.registerFlight.sendTransaction(
+          `XYZ${x}`,
+          updatedTimestamp,
+          newAirline,
+          {
+            from: newAirline,
+          }
+        );
+      }
+    } catch (e) {
+      console.log(e);
+    }
+
+    const result = await config.flightSuretyApp.getFlight.call(
+      `XYZ${1}`,
+      updatedTimestamp,
+      newAirline
+    );
+
+    // ASSERT
+    assert.equal(result[1], true, "Airline should be Rejected");
+  });
 });

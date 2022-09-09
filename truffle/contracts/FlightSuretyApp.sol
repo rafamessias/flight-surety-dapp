@@ -30,6 +30,25 @@ interface IFlightSuretyData {
     ) external returns (bool success, uint8 votes);
 
     function getTotalAirlines() external view returns (uint8);
+
+    function registerFlight(
+        string memory _flight,
+        uint256 _updatedTimestamp,
+        address _airline
+    ) external returns (bytes32);
+
+    function getFlight(
+        string calldata _flight,
+        uint256 _updatedTimestamp,
+        address _airline
+    )
+        external
+        view
+        returns (
+            bytes32,
+            bool,
+            uint256
+        );
 }
 
 /************************************************** */
@@ -154,7 +173,34 @@ contract FlightSuretyApp {
      * @dev Register a future flight for insuring.
      *
      */
-    function registerFlight() external pure {}
+    function registerFlight(
+        string calldata _flight,
+        uint256 _updatedTimestamp,
+        address _airline
+    ) external returns (bytes32) {
+        return
+            flightSuretyData.registerFlight(
+                _flight,
+                _updatedTimestamp,
+                _airline
+            );
+    }
+
+    function getFlight(
+        string calldata _flight,
+        uint256 _updatedTimestamp,
+        address _airline
+    )
+        external
+        view
+        returns (
+            bytes32,
+            bool,
+            uint256
+        )
+    {
+        return flightSuretyData.getFlight(_flight, _updatedTimestamp, _airline);
+    }
 
     /**
      * @dev Called after oracle has updated flight status

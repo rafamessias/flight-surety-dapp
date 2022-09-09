@@ -43,6 +43,7 @@ contract FlightSuretyData {
         uint8 statusCode;
         uint256 updatedTimestamp;
         address airline;
+        string flight;
     }
     mapping(bytes32 => Flight) private flights;
 
@@ -103,6 +104,15 @@ contract FlightSuretyData {
         require(
             authorizedCallers[msg.sender] == true,
             "Only Authorized callers can do this action"
+        );
+        _;
+    }
+
+    modifier requireAuthorizedAirline(address _airline) {
+        require(
+            airlines[_airline].status == AirlineStatus.Approved ||
+                _airline == contractOwner,
+            "Only authorized airline can perform this action"
         );
         _;
     }
@@ -247,6 +257,7 @@ contract FlightSuretyData {
     )
         external
         requireIsOperational
+        requireAuthorizedAirline(_from)
         requireValidAddress(_address)
         requireAirlineFundedStatus(_address)
         requireAuthorizedCaller
@@ -327,14 +338,47 @@ contract FlightSuretyData {
     }
 
     function registerFlight(
-        bytes32 flight,
-        uint256 updatedTimestamp,
-        address airline
-    ) external requireValidAddress(airline) requireAuthorizedCaller {
-        flights[flight].airline = airline;
-        flights[flight].updatedTimestamp = updatedTimestamp;
-        flights[flight].isRegistered = true;
-        flights[flight].statusCode = 0;
+        string calldata _flight,
+        uint256 _updatedTimestamp,
+        address _airline
+    )
+        external
+        requireValidAddress(_airline)
+        requireAuthorizedAirline(_airline)
+        requireAuthorizedCaller
+        returns (bytes32)
+    {
+        bytes32 flightKey = getFlightKey(_airline, _flight, _updatedTimestamp);
+
+        flights[flightKey].airline = _airline;
+        flights[flightKey].flight = _flight;
+        flights[flightKey].updatedTimestamp = _updatedTimestamp;
+        flights[flightKey].isRegistered = true;
+        flights[flightKey].statusCode = 0;
+
+        return flightKey;
+    }
+
+    function getFlight(
+        string calldata _flight,
+        uint256 _updatedTimestamp,
+        address _airline
+    )
+        external
+        view
+        requireAuthorizedCaller
+        returns (
+            bytes32,
+            bool,
+            uint256
+        )
+    {
+        bytes32 flightKey = getFlightKey(_airline, _flight, _updatedTimestamp);
+        return (
+            flightKey,
+            flights[flightKey].isRegistered,
+            flights[flightKey].statusCode
+        );
     }
 
     /**
