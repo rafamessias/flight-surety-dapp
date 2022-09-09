@@ -19,17 +19,22 @@ contract FlightSuretyData {
     }
     AirlineStatus constant defaultChoice = AirlineStatus.Registered;
 
+    struct AirlineApproval {
+        address airline;
+        bool approval;
+    }
+
     //airline struct
     struct Airline {
         string name;
         AirlineStatus status;
         uint256 funds;
-        uint8 votes;
+        AirlineApproval[] votes;
     }
 
     mapping(address => Airline) private airlines;
-    uint8 private airlineCount;
-    uint8 private multiPartyConsensus = 5;
+    uint8 private airlineCount = 0;
+    uint8 private multiPartyConsensusThreshold = 4;
 
     // Flights
 
@@ -138,19 +143,19 @@ contract FlightSuretyData {
     /**
     Change multi-party consensus parameter
      */
-    function getMultiPartyConsensus()
+    function getMultiPartyConsensusThreshold()
         public
         view
         requireContractOwner
         returns (uint8)
     {
-        return multiPartyConsensus;
+        return multiPartyConsensusThreshold;
     }
 
     /**
     Change multi-party consensus parameter
      */
-    function setMultiPartyConsensus(uint8 _consensusCount)
+    function setmultiPartyConsensusThreshold(uint8 _consensusCount)
         external
         requireContractOwner
     {
@@ -158,7 +163,7 @@ contract FlightSuretyData {
             _consensusCount > 0 && _consensusCount < 10,
             "Avoid too large number of consensus"
         );
-        multiPartyConsensus = _consensusCount;
+        multiPartyConsensusThreshold = _consensusCount;
     }
 
     /**
@@ -191,11 +196,21 @@ contract FlightSuretyData {
     function isAirline(address _address)
         private
         view
+        requireContractOwner
         requireValidAddress(_address)
         returns (bool)
     {
         bytes memory _name = bytes(airlines[_address].name);
         return _name.length != 0;
+    }
+
+    function getTotalAirlines()
+        external
+        view
+        requireAuthorizedCaller
+        returns (uint8)
+    {
+        return airlineCount;
     }
 
     /********************************************************************************************/
@@ -217,8 +232,6 @@ contract FlightSuretyData {
     {
         airlines[_address].name = name;
         airlines[_address].funds = 0;
-        airlines[_address].votes = 0;
-        airlineCount++;
 
         return (true, 0);
     }
@@ -227,7 +240,11 @@ contract FlightSuretyData {
     @notice Airline approval function
      */
 
-    function approveAirlineRegistration(address _address, bool approve)
+    function approveAirlineRegistration(
+        address _address,
+        address _from,
+        bool _approval
+    )
         external
         requireIsOperational
         requireValidAddress(_address)
@@ -235,19 +252,55 @@ contract FlightSuretyData {
         requireAuthorizedCaller
         returns (bool success, uint8 votes)
     {
-        if (airlineCount > multiPartyConsensus && approve == true) {
-            airlines[_address].votes += 1;
-            return (true, airlines[_address].votes);
-        }
+        //if we have more airlines than the threshold, apply multi-party consensus
+        if (airlineCount >= multiPartyConsensusThreshold) {
+            bool isDuplicatedVote = false;
 
-        if (approve == true) {
+            for (
+                uint8 vote = 0;
+                vote < airlines[_address].votes.length;
+                vote++
+            ) {
+                if (airlines[_address].votes[vote].airline == _from) {
+                    isDuplicatedVote = true;
+                    break;
+                }
+            }
+
+            require(!isDuplicatedVote, "Caller already vote for this Airline");
+
+            airlines[_address].votes.push(
+                AirlineApproval({airline: _from, approval: _approval})
+            );
+
+            // if votes are more than 50% of the airlines, define if it is approved or not
+            if (airlines[_address].votes.length >= (airlineCount / 2)) {
+                uint8 approvedVotes = 0;
+                for (
+                    uint8 vote = 0;
+                    vote < airlines[_address].votes.length;
+                    vote++
+                ) {
+                    if (airlines[_address].votes[vote].approval == true)
+                        approvedVotes += 1;
+                }
+
+                if (approvedVotes >= (airlineCount / 2)) {
+                    airlines[_address].status = AirlineStatus.Approved;
+                    airlineCount += 1;
+                } else {
+                    airlines[_address].status = AirlineStatus.Rejected;
+                }
+            }
+        } else {
+            airlines[_address].votes.push(
+                AirlineApproval({airline: _from, approval: _approval})
+            );
             airlines[_address].status = AirlineStatus.Approved;
-            return (true, airlines[_address].votes);
+            airlineCount += 1;
         }
 
-        if (approve == false) {
-            return (false, airlines[_address].votes);
-        }
+        return (true, uint8(airlines[_address].votes.length));
     }
 
     /**
@@ -269,8 +322,19 @@ contract FlightSuretyData {
             airlines[_address].name,
             uint8(airlines[_address].status),
             airlines[_address].funds,
-            airlines[_address].votes
+            uint8(airlines[_address].votes.length)
         );
+    }
+
+    function registerFlight(
+        bytes32 flight,
+        uint256 updatedTimestamp,
+        address airline
+    ) external requireValidAddress(airline) requireAuthorizedCaller {
+        flights[flight].airline = airline;
+        flights[flight].updatedTimestamp = updatedTimestamp;
+        flights[flight].isRegistered = true;
+        flights[flight].statusCode = 0;
     }
 
     /**
@@ -312,8 +376,7 @@ contract FlightSuretyData {
         );
 
         airlines[_address].funds = msg.value;
-        // if more than 5, it requires multi-party consensus
-        if (airlineCount < 6) airlines[_address].status = AirlineStatus.Funded;
+        airlines[_address].status = AirlineStatus.Funded;
     }
 
     function getFlightKey(

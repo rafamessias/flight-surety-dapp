@@ -23,9 +23,13 @@ interface IFlightSuretyData {
 
     function fund(address _address) external payable;
 
-    function approveAirlineRegistration(address _address, bool approve)
-        external
-        returns (bool success, uint8 votes);
+    function approveAirlineRegistration(
+        address _address,
+        address _from,
+        bool _approval
+    ) external returns (bool success, uint8 votes);
+
+    function getTotalAirlines() external view returns (uint8);
 }
 
 /************************************************** */
@@ -117,11 +121,16 @@ contract FlightSuretyApp {
      *
      */
 
-    function approveAirlineRegistration(address _address)
+    function approveAirlineRegistration(address _address, bool _approval)
         external
         returns (bool success, uint8 votes)
     {
-        return flightSuretyData.approveAirlineRegistration(_address, true);
+        return
+            flightSuretyData.approveAirlineRegistration(
+                _address,
+                msg.sender,
+                _approval
+            );
     }
 
     function getAirline(address _address)
@@ -135,6 +144,10 @@ contract FlightSuretyApp {
         )
     {
         return flightSuretyData.getAirline(_address);
+    }
+
+    function getTotalAirlines() external view returns (uint8) {
+        return flightSuretyData.getTotalAirlines();
     }
 
     /**

@@ -8,19 +8,35 @@ contract("Flight Surety Tests", async (accounts) => {
     await config.flightSuretyData.authorizeCaller(
       config.flightSuretyApp.address
     );
+
+    // add the first airline
+    await config.flightSuretyApp.registerAirline.sendTransaction(
+      config.firstAirline,
+      "First Airlines"
+    );
+
+    await config.flightSuretyApp.airlineFund.sendTransaction({
+      from: config.firstAirline,
+      value: web3.utils.toWei("1", "ether"),
+    });
+
+    await config.flightSuretyApp.approveAirlineRegistration.sendTransaction(
+      config.firstAirline,
+      true
+    );
   });
 
   /****************************************************************************************/
   /* Operations and Settings                                                              */
   /****************************************************************************************/
 
-  it(`(multiparty) has correct initial isOperational() value`, async function () {
+  it(`(isOperational) has correct initial isOperational() value`, async function () {
     // Get operating status
     const status = await config.flightSuretyApp.isOperational.call();
     assert.equal(status, true, "Incorrect initial operating status value");
   });
 
-  it(`(multiparty) can block access to setOperatingStatus() for non-Contract Owner account`, async function () {
+  it(`(isOperational) can block access to setOperatingStatus() for non-Contract Owner account`, async function () {
     // Ensure that access is denied for non-Contract Owner account
     let accessDenied = false;
     try {
@@ -45,6 +61,16 @@ contract("Flight Surety Tests", async (accounts) => {
           from: config.firstAirline,
         }
       );
+
+      for (let x = 3; x < 10; x++) {
+        await config.flightSuretyApp.registerAirline.sendTransaction(
+          accounts[x],
+          `Airline ${x}`,
+          {
+            from: config.firstAirline,
+          }
+        );
+      }
     } catch (e) {
       console.log(e);
     }
@@ -63,10 +89,12 @@ contract("Flight Surety Tests", async (accounts) => {
     const newAirline = accounts[2];
     // ACT
     try {
-      await config.flightSuretyApp.airlineFund.sendTransaction({
-        from: newAirline,
-        value: web3.utils.toWei("1", "ether"),
-      });
+      for (let x = 2; x < 10; x++) {
+        await config.flightSuretyApp.airlineFund.sendTransaction({
+          from: accounts[x],
+          value: web3.utils.toWei("1", "ether"),
+        });
+      }
     } catch (e) {
       console.log(e);
     }
@@ -85,69 +113,80 @@ contract("Flight Surety Tests", async (accounts) => {
     const newAirline = accounts[2];
     // ACT
     try {
-      await config.flightSuretyApp.approveAirlineRegistration.sendTransaction(
-        newAirline
-      );
+      for (let x = 2; x < 5; x++) {
+        await config.flightSuretyApp.approveAirlineRegistration.sendTransaction(
+          accounts[x],
+          true
+        );
+      }
     } catch (e) {
       console.log(e);
     }
     const result = await config.flightSuretyApp.getAirline.call(newAirline);
 
     // ASSERT
+    assert.equal(result[1].toString(), "2", "Airline should be approved");
+  });
+
+  it("(airline) Approve Airline Registration - Multi-Party Consensus", async () => {
+    // ARRANGE
+    const newAirline = accounts[5];
+
+    // ACT
+    try {
+      for (let x = 1; x < 3; x++) {
+        await config.flightSuretyApp.approveAirlineRegistration.sendTransaction(
+          newAirline,
+          true,
+          {
+            from: accounts[x],
+          }
+        );
+      }
+    } catch (e) {
+      console.log(e);
+    }
+
+    const result = await config.flightSuretyApp.getAirline.call(newAirline);
+    const count = await config.flightSuretyApp.getTotalAirlines.call();
+
+    // ASSERT
+    assert.equal(result[1].toString(), "2", "Airline should be approved");
     assert.equal(
-      result[1].toString(),
-      "2",
-      "Airline should be funded and waiting to be approved"
+      count.toString(),
+      "5",
+      "Should have 5 airlines with approved status"
     );
   });
 
-  // it(`(multiparty) can allow access to setOperatingStatus() for Contract Owner account`, async function () {
-  //   // Ensure that access is allowed for Contract Owner account
-  //   const accessDenied = false;
-  //   try {
-  //     await config.flightSuretyData.setOperatingStatus(false);
-  //   } catch (e) {
-  //     accessDenied = true;
-  //   }
-  //   assert.equal(
-  //     accessDenied,
-  //     false,
-  //     "Access not restricted to Contract Owner"
-  //   );
-  // });
+  it("(airline) Reject Airline Registration - Multi-Party Consensus", async () => {
+    // ARRANGE
+    const newAirline = accounts[6];
 
-  // it(`(multiparty) can block access to functions using requireIsOperational when operating status is false`, async function () {
-  //   await config.flightSuretyData.setOperatingStatus(false);
+    // ACT
+    try {
+      for (let x = 1; x < 3; x++) {
+        await config.flightSuretyApp.approveAirlineRegistration.sendTransaction(
+          newAirline,
+          false,
+          {
+            from: accounts[x],
+          }
+        );
+      }
+    } catch (e) {
+      console.log(e);
+    }
 
-  //   let reverted = false;
-  //   try {
-  //     await config.flightSurety.setTestingMode(true);
-  //   } catch (e) {
-  //     reverted = true;
-  //   }
-  //   assert.equal(reverted, true, "Access not blocked for requireIsOperational");
+    const result = await config.flightSuretyApp.getAirline.call(newAirline);
+    const count = await config.flightSuretyApp.getTotalAirlines.call();
 
-  //   // Set it back for other tests to work
-  //   await config.flightSuretyData.setOperatingStatus(true);
-  // });
-
-  // it("(airline) cannot register an Airline using registerAirline() if it is not funded", async () => {
-  //   // ARRANGE
-  //   let newAirline = accounts[2];
-
-  //   // ACT
-  //   try {
-  //     await config.flightSuretyApp.registerAirline(newAirline, {
-  //       from: config.firstAirline,
-  //     });
-  //   } catch (e) {}
-  //   let result = await config.flightSuretyData.isAirline.call(newAirline);
-
-  //   // ASSERT
-  //   assert.equal(
-  //     result,
-  //     false,
-  //     "Airline should not be able to register another airline if it hasn't provided funding"
-  //   );
-  // });
+    // ASSERT
+    assert.equal(result[1].toString(), "3", "Airline should be Rejected");
+    assert.equal(
+      count.toString(),
+      "5",
+      "Should have 5 airlines with approved status"
+    );
+  });
 });
