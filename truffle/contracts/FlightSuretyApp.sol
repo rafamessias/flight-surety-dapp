@@ -4,6 +4,11 @@ pragma solidity ^0.8.14;
 //Define Contract Data Interface
 
 interface IFlightSuretyData {
+    struct CustomerInfo {
+        uint256 fund;
+        bytes32 flight;
+    }
+
     function isOperational() external view returns (bool);
 
     function registerAirline(address _address, string calldata name)
@@ -37,18 +42,27 @@ interface IFlightSuretyData {
         address _airline
     ) external returns (bytes32);
 
-    function getFlight(
-        string calldata _flight,
-        uint256 _updatedTimestamp,
-        address _airline
-    )
+    function getFlight(bytes32)
         external
         view
         returns (
             bytes32,
+            address,
+            string memory,
+            uint256,
             bool,
             uint256
         );
+
+    function buy(bytes32 _flight, address _customer)
+        external
+        payable
+        returns (bool);
+
+    function getCustomerInsurances(address _customer)
+        external
+        view
+        returns (CustomerInfo[] memory);
 }
 
 /************************************************** */
@@ -60,8 +74,14 @@ contract FlightSuretyApp {
     /********************************************************************************************/
 
     address private contractOwner; // Account used to deploy contract
-
     IFlightSuretyData private flightSuretyData;
+
+    uint256 minInsuranceFund = 1 ether;
+
+    struct CustomerInfo {
+        uint256 fund;
+        bytes32 flight;
+    }
 
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
@@ -195,11 +215,44 @@ contract FlightSuretyApp {
         view
         returns (
             bytes32,
+            address,
+            string memory,
+            uint256,
             bool,
             uint256
         )
     {
-        return flightSuretyData.getFlight(_flight, _updatedTimestamp, _airline);
+        return
+            flightSuretyData.getFlight(
+                getFlightKey(_airline, _flight, _updatedTimestamp)
+            );
+    }
+
+    // customer can buy insurance
+    function buyInsurance(
+        string calldata _flight,
+        uint256 _updatedTimestamp,
+        address _airline
+    ) external payable returns (bool) {
+        require(msg.value >= minInsuranceFund, "Minimum fund not provided");
+
+        return
+            flightSuretyData.buy(
+                getFlightKey(_airline, _flight, _updatedTimestamp),
+                msg.sender
+            );
+    }
+
+    //get customers insurance
+    function getCustomerInsurances(address _customer)
+        external
+        view
+        returns (CustomerInfo[] memory)
+    {
+        CustomerInfo[] memory result = flightSuretyData.getCustomerInsurances(
+            _customer
+        );
+        return result;
     }
 
     /**

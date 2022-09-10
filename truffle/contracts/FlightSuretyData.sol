@@ -44,6 +44,7 @@ contract FlightSuretyData {
         uint256 updatedTimestamp;
         address airline;
         string flight;
+        Customer[] customers;
     }
     mapping(bytes32 => Flight) private flights;
 
@@ -54,6 +55,20 @@ contract FlightSuretyData {
     uint8 private constant STATUS_CODE_LATE_WEATHER = 30;
     uint8 private constant STATUS_CODE_LATE_TECHNICAL = 40;
     uint8 private constant STATUS_CODE_LATE_OTHER = 50;
+
+    // customers
+    struct Customer {
+        address customer;
+        uint256 fund;
+    }
+
+    struct CustomerInfo {
+        uint256 fund;
+        bytes32 flight;
+    }
+
+    //customers
+    mapping(address => CustomerInfo[]) customers;
 
     /********************************************************************************************/
     /*                                       EVENT DEFINITIONS                                  */
@@ -359,23 +374,24 @@ contract FlightSuretyData {
         return flightKey;
     }
 
-    function getFlight(
-        string calldata _flight,
-        uint256 _updatedTimestamp,
-        address _airline
-    )
+    function getFlight(bytes32 flightKey)
         external
         view
         requireAuthorizedCaller
         returns (
             bytes32,
+            address,
+            string memory,
+            uint256,
             bool,
             uint256
         )
     {
-        bytes32 flightKey = getFlightKey(_airline, _flight, _updatedTimestamp);
         return (
             flightKey,
+            flights[flightKey].airline,
+            flights[flightKey].flight,
+            flights[flightKey].updatedTimestamp,
             flights[flightKey].isRegistered,
             flights[flightKey].statusCode
         );
@@ -385,7 +401,33 @@ contract FlightSuretyData {
      * @dev Buy insurance for a flight
      *
      */
-    function buy() external payable {}
+    function buy(bytes32 _flight, address _customer)
+        external
+        payable
+        requireValidAddress(_customer)
+        requireAuthorizedCaller
+        returns (bool)
+    {
+        flights[_flight].customers.push(
+            Customer({customer: _customer, fund: msg.value})
+        );
+
+        customers[_customer].push(
+            CustomerInfo({flight: _flight, fund: msg.value})
+        );
+
+        return (true);
+    }
+
+    function getCustomerInsurances(address _customer)
+        external
+        view
+        requireValidAddress(_customer)
+        requireAuthorizedCaller
+        returns (CustomerInfo[] memory)
+    {
+        return (customers[_customer]);
+    }
 
     /**
      *  @dev Credits payouts to insurees
