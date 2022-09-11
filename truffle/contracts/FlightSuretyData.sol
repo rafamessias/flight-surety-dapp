@@ -9,6 +9,8 @@ contract FlightSuretyData {
     address private contractOwner; // Account used to deploy contract
     bool private operational = true; // Blocks all state changes throughout the contract if false
 
+    uint256 airlineFund = 0.000001 ether;
+
     mapping(address => bool) private authorizedCallers; //who can call this contract
 
     enum AirlineStatus {
@@ -452,10 +454,7 @@ contract FlightSuretyData {
         requireValidAddress(_address)
         requireAuthorizedCaller
     {
-        require(
-            msg.value >= 1 ether,
-            "Airline funds should be 1 ether or more"
-        );
+        require(msg.value >= airlineFund, "Airline funds not enough");
         require(
             airlines[_address].status == AirlineStatus.Registered,
             "Airline should be in registered status in order to receive funds"

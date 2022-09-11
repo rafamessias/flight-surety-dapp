@@ -8,6 +8,10 @@ contract("Flight Surety Tests", async (accounts) => {
   updatedTimestamp.setMonth(updatedTimestamp.getDate() + 2);
   updatedTimestamp = updatedTimestamp.getMilliseconds();
 
+  //setting the funds
+  const airlineFunds = web3.utils.toWei("0.000001", "ether");
+  const customerFund = web3.utils.toWei("0.000001", "ether");
+
   before("setup contract", async () => {
     config = await Test.Config(accounts);
     await config.flightSuretyData.authorizeCaller(
@@ -22,7 +26,7 @@ contract("Flight Surety Tests", async (accounts) => {
 
     await config.flightSuretyApp.airlineFund.sendTransaction({
       from: config.firstAirline,
-      value: web3.utils.toWei("1", "ether"),
+      value: airlineFunds,
     });
 
     await config.flightSuretyApp.approveAirlineRegistration.sendTransaction(
@@ -97,7 +101,7 @@ contract("Flight Surety Tests", async (accounts) => {
       for (let x = 2; x < 10; x++) {
         await config.flightSuretyApp.airlineFund.sendTransaction({
           from: accounts[x],
-          value: web3.utils.toWei("10", "ether"),
+          value: airlineFunds,
         });
       }
     } catch (e) {
@@ -108,7 +112,7 @@ contract("Flight Surety Tests", async (accounts) => {
     // ASSERT
     assert.equal(
       result[2].toString(),
-      "10000000000000000000",
+      airlineFunds.toString(),
       "Airline should be funded and waiting to be approved"
     );
   });
@@ -222,12 +226,12 @@ contract("Flight Surety Tests", async (accounts) => {
     );
 
     // ASSERT
-    assert.equal(result[4], true, "Airline should be Rejected");
+    assert.equal(result[4], true, "Airline should register a flight");
   });
 
   it("(Customer) Can buy Insurance", async () => {
     // ARRANGE
-    const customer = accounts[10];
+    const customer = accounts[7];
     const airline = accounts[2];
 
     // ACT
@@ -238,20 +242,23 @@ contract("Flight Surety Tests", async (accounts) => {
         airline,
         {
           from: customer,
-          value: web3.utils.toWei("1", "ether"),
+          value: customerFund,
         }
       );
     } catch (e) {
       console.log(e);
     }
 
-    const result = await config.flightSuretyApp.getFlight.call(
-      `XYZ${1}`,
-      updatedTimestamp,
-      newAirline
+    const result = await config.flightSuretyApp.getCustomerInsurances.call(
+      customer,
+      { from: customer }
     );
 
     // ASSERT
-    assert.equal(result[4], true, "Airline should be Rejected");
+    assert.equal(
+      result[0][0],
+      customerFund.toString(),
+      "Customer should have an insurance"
+    );
   });
 });

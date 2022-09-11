@@ -76,7 +76,7 @@ contract FlightSuretyApp {
     address private contractOwner; // Account used to deploy contract
     IFlightSuretyData private flightSuretyData;
 
-    uint256 minInsuranceFund = 1 ether;
+    uint256 minInsuranceFund = 0.000001 ether;
 
     struct CustomerInfo {
         uint256 fund;
@@ -237,7 +237,7 @@ contract FlightSuretyApp {
         require(msg.value >= minInsuranceFund, "Minimum fund not provided");
 
         return
-            flightSuretyData.buy(
+            flightSuretyData.buy{value: msg.value}(
                 getFlightKey(_airline, _flight, _updatedTimestamp),
                 msg.sender
             );
@@ -247,12 +247,9 @@ contract FlightSuretyApp {
     function getCustomerInsurances(address _customer)
         external
         view
-        returns (CustomerInfo[] memory)
+        returns (IFlightSuretyData.CustomerInfo[] memory)
     {
-        CustomerInfo[] memory result = flightSuretyData.getCustomerInsurances(
-            _customer
-        );
-        return result;
+        return flightSuretyData.getCustomerInsurances(_customer);
     }
 
     /**
