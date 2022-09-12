@@ -28,7 +28,7 @@ function EthContext() {
 
   const connectWallet = useCallback(() => {
     try {
-      const artifact = {}; //require("../../contracts/file.json");
+      const artifact = require("contracts/FlightSuretyApp.json");
       init(artifact);
     } catch (error) {
       console.error(error);
@@ -37,31 +37,31 @@ function EthContext() {
 
   //if wallet connected, init the state
   useEffect(() => {
-    // if (window?.ethereum !== undefined) {
-    //   if (window.ethereum.isConnected()) connectWallet();
-    // }
-  }, [connectWallet]);
+    if (window?.ethereum !== undefined) {
+      if (window.ethereum.isConnected()) connectWallet();
+    }
+  }, []);
 
   //handle events when metamask changes
-  // useEffect(() => {
-  //   const events = ["chainChanged", "accountsChanged", "disconnect"];
-  //   const handleChange = (e) => {
-  //     dispatch({
-  //       type: actions.init,
-  //       data: initialState,
-  //     });
-  //   };
+  useEffect(() => {
+    const events = ["chainChanged", "accountsChanged", "disconnect"];
+    const handleChange = (e) => {
+      dispatch({
+        type: actions.init,
+        data: initialState,
+      });
+    };
 
-  //   if (window?.ethereum !== undefined)
-  //     events.forEach((e) => window.ethereum.on(e, () => handleChange(e)));
-  //   return () => {
-  //     if (window?.ethereum !== undefined) {
-  //       events.forEach((e) =>
-  //         window.ethereum.removeListener(e, () => handleChange(e))
-  //       );
-  //     }
-  //   };
-  // }, [init, state.artifact]);
+    if (window?.ethereum !== undefined)
+      events.forEach((e) => window.ethereum.on(e, () => handleChange(e)));
+    return () => {
+      if (window?.ethereum !== undefined) {
+        events.forEach((e) =>
+          window.ethereum.removeListener(e, () => handleChange(e))
+        );
+      }
+    };
+  }, [init, state.artifact]);
 
   return {
     state,
