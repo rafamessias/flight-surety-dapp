@@ -11,6 +11,8 @@ interface IFlightSuretyData {
 
     function isOperational() external view returns (bool);
 
+    function setOperatingStatus(bool mode) external;
+
     function registerAirline(address _address, string calldata name)
         external
         payable
@@ -128,6 +130,10 @@ contract FlightSuretyApp {
 
     function isOperational() public view returns (bool) {
         return flightSuretyData.isOperational(); // Modify to call data contract's status
+    }
+
+    function setOperatingStatus(bool mode) external requireContractOwner {
+        flightSuretyData.setOperatingStatus(mode);
     }
 
     /********************************************************************************************/

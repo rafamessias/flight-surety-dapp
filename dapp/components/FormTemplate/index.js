@@ -27,6 +27,7 @@ export default function FormTemplate(props) {
                     type={field.type ? field.type : "text"}
                     name={field.name}
                     id={field.name}
+                    value={field.value ? field.value : ""}
                     step={field.type === "number" ? 0.000000000000000001 : 0}
                     onChange={() => (!submitTitle ? onSubmit() : false)}
                     className="block w-full flex-1 rounded border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
@@ -41,6 +42,7 @@ export default function FormTemplate(props) {
                   type={field.type}
                   name={field.name}
                   id={field.name}
+                  value={field.value ? field.value : "false"}
                   onChange={() =>
                     !submitTitle ? handleSubmit(onSubmit)() : false
                   }
