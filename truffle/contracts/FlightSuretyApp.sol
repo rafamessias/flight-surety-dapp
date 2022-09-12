@@ -107,7 +107,10 @@ contract FlightSuretyApp {
      * @dev Modifier that requires the "ContractOwner" account to be the function caller
      */
     modifier requireContractOwner() {
-        require(msg.sender == contractOwner, "Caller is not contract owner");
+        require(
+            msg.sender == contractOwner,
+            "Caller is not contract owner - APP"
+        );
         _;
     }
 
@@ -130,10 +133,6 @@ contract FlightSuretyApp {
 
     function isOperational() public view returns (bool) {
         return flightSuretyData.isOperational(); // Modify to call data contract's status
-    }
-
-    function setOperatingStatus(bool mode) external requireContractOwner {
-        flightSuretyData.setOperatingStatus(mode);
     }
 
     /********************************************************************************************/

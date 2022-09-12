@@ -42,7 +42,8 @@ export default function FormTemplate(props) {
                   type={field.type}
                   name={field.name}
                   id={field.name}
-                  value={field.value ? field.value : "false"}
+                  checked={field.value ? field.value : false}
+                  value={field.value ? field.value : false}
                   onChange={() =>
                     !submitTitle ? handleSubmit(onSubmit)() : false
                   }

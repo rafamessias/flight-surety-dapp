@@ -102,7 +102,10 @@ contract FlightSuretyData {
      * @dev Modifier that requires the "ContractOwner" account to be the function caller
      */
     modifier requireContractOwner() {
-        require(msg.sender == contractOwner, "Caller is not contract owner");
+        require(
+            msg.sender == contractOwner,
+            "Caller is not contract owner - DATA"
+        );
         _;
     }
 

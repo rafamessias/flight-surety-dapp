@@ -8,6 +8,7 @@ const initialState = {
   accounts: null,
   networkID: null,
   contract: null,
+  isOperational: null,
 };
 
 const reducer = (state, action) => {

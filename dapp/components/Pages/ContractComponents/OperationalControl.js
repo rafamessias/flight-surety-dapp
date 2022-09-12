@@ -9,48 +9,37 @@ const fields = [
     title: "Contract Operational",
     type: "checkbox",
     placeHolder: "",
+    value: null,
   },
 ];
 
 export default function OperationalControl() {
   const {
-    state: { contract, accounts },
+    state: { contractData, accounts, isOperational },
   } = useEth();
 
-  const account = !accounts ? "" : accounts[0];
-  const [contractOperational, setContractOperational] = useState(true);
+  const account = accounts ? accounts[0] : "";
+
   const [controlFields, setControlFields] = useState(fields);
 
-  const checkIfContractIsOperational = async () => {
-    console.log(contract);
-    try {
-      const result = await contract.methods
-        .isOperational()
-        .call({ from: account });
-
-      setContractOperational(result);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   useEffect(() => {
-    checkIfContractIsOperational();
-  }, [contract]);
-
-  useEffect(() => {
+    console.log(isOperational);
     setControlFields((prev) =>
-      prev.map((field) => ({ ...field, value: contractOperational }))
+      prev.map((field) => ({
+        ...field,
+        value: isOperational,
+      }))
     );
-  }, [contractOperational]);
+  }, [isOperational]);
 
-  const submitAction = (data) => {
-    console.log(data);
+  const submitAction = async (data) => {
+    console.log(data, account);
 
     try {
-      contract.methods
-        .setOperatingStatus({ mode: data.set_contract_op })
+      const result = await contractData.methods
+        .setOperatingStatus(data.set_contract_op)
         .send({ from: account });
+      console.log(result);
     } catch (error) {
       console.log(error);
     }
@@ -61,7 +50,7 @@ export default function OperationalControl() {
         title="Contract Operational Control"
         submitAction={submitAction}
         submitTitle={null}
-        fields={fields}
+        fields={controlFields}
       />
     </Container>
   );

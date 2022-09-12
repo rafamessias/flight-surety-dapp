@@ -5,28 +5,8 @@ import { useEffect, useState } from "react";
 export default function SubHeader() {
   const { currentPage } = useAppContext();
   const {
-    state: { contract, accounts },
+    state: { isOperational },
   } = useEth();
-
-  const account = !accounts ? "" : accounts[0];
-  const [contractOperational, setContractOperational] = useState(true);
-
-  const checkIfContractIsOperational = async () => {
-    try {
-      const result = await contract.methods
-        .isOperational()
-        .call({ from: account });
-
-      setContractOperational(result);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    if (!contract) return;
-    checkIfContractIsOperational();
-  }, [contract]);
 
   return (
     <div className="z-0 h-20 w-full py-2 px-4 flex items-center justify-between bg-white shadow-sm mb-8">
@@ -34,13 +14,29 @@ export default function SubHeader() {
 
       {currentPage.url === "/" && (
         <div className="flex items-center">
-          {contractOperational && (
-            <div className="py-1 px-2 rounded bg-green-100 text-green-700 text-xs font-light">
-              isOperational
-            </div>
+          {isOperational === null ? (
+            <div className="animate-pulse py-1 px-2 w-24 rounded bg-slate-100  text-xs font-light"></div>
+          ) : (
+            <ShowContractStatus isOperational={isOperational} />
           )}
         </div>
       )}
     </div>
+  );
+}
+
+function ShowContractStatus({ isOperational }) {
+  return (
+    <>
+      {isOperational ? (
+        <div className="py-1 px-2 rounded bg-green-100 text-green-700 text-xs font-light">
+          isOperational
+        </div>
+      ) : (
+        <div className="py-1 px-2 rounded bg-red-100 text-red-700 text-xs font-light">
+          NOT Operational
+        </div>
+      )}
+    </>
   );
 }

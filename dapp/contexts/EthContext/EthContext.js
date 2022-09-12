@@ -6,30 +6,47 @@ function EthContext() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   //create web3 objects to be used across the App
-  const init = useCallback(async (artifact) => {
-    if (artifact) {
+  const init = useCallback(async (artifactApp, artifactData) => {
+    if (artifactApp) {
       const web3 = new Web3(Web3.givenProvider || "http://localhost:7545");
       const accounts = await web3.eth.requestAccounts();
       const networkID = await web3.eth.net.getId();
-      const { abi } = artifact;
-      let address, contract;
+      const { abi } = artifactApp;
+      const { abi: abiData } = artifactData;
+      let address, contract, addressData, contractData, isOperational;
       try {
-        address = artifact.networks[networkID].address;
+        address = artifactApp.networks[networkID].address;
+        addressData = artifactData.networks[networkID].address;
+
         contract = new web3.eth.Contract(abi, address);
+        contractData = new web3.eth.Contract(abiData, addressData);
+        isOperational = await checkIfContractIsOperational(
+          contract,
+          accounts[0]
+        );
       } catch (err) {
         console.error(err);
       }
       dispatch({
         type: actions.init,
-        data: { artifact, web3, accounts, networkID, contract },
+        data: {
+          contract,
+          contractData,
+          web3,
+          accounts,
+          networkID,
+          contract,
+          isOperational,
+        },
       });
     }
   }, []);
 
   const connectWallet = useCallback(() => {
     try {
-      const artifact = require("contracts/FlightSuretyApp.json");
-      init(artifact);
+      const artifactApp = require("contracts/FlightSuretyApp.json");
+      const artifactData = require("contracts/FlightSuretyData.json");
+      init(artifactApp, artifactData);
     } catch (error) {
       console.error(error);
     }
@@ -62,6 +79,19 @@ function EthContext() {
       }
     };
   }, [init, state.artifact]);
+
+  const checkIfContractIsOperational = async (contract, account) => {
+    try {
+      const result = await contract.methods
+        .isOperational()
+        .call({ from: account });
+
+      return result;
+    } catch (error) {
+      console.log(error);
+      return false;
+    }
+  };
 
   return {
     state,
