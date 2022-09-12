@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 
 export default function FormTemplate(props) {
-  const { register, handleSubmit } = useForm();
+  const { register, setValue, handleSubmit } = useForm();
   const { title, submitAction, submitTitle, fields, children } = props;
 
   const onSubmit = (data) => {
@@ -27,7 +27,7 @@ export default function FormTemplate(props) {
                     type={field.type ? field.type : "text"}
                     name={field.name}
                     id={field.name}
-                    value={field.value ? field.value : ""}
+                    value={field.value}
                     step={field.type === "number" ? 0.000000000000000001 : 0}
                     onChange={() => (!submitTitle ? onSubmit() : false)}
                     className="block w-full flex-1 rounded border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
@@ -43,10 +43,10 @@ export default function FormTemplate(props) {
                   name={field.name}
                   id={field.name}
                   checked={field.value ? field.value : false}
-                  value={field.value ? field.value : false}
-                  onChange={() =>
-                    !submitTitle ? handleSubmit(onSubmit)() : false
-                  }
+                  onChange={(e) => {
+                    setValue(field.name, e.target.checked);
+                    !submitTitle ? handleSubmit(onSubmit)() : false;
+                  }}
                   className="appearance-none rounded p-2 cursor-pointer border-gray-300 focus:border-slate-500 focus:ring-slate-500 hover:border-slate-500 indeterminate:bg-gray-300 checked:bg-green-500 checked:hover:bg-green-500 checked:focus:bg-green-500 "
                   placeholder={field.placeHolder ? field.placeHolder : ""}
                 />

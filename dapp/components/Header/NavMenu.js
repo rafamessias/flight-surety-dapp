@@ -7,6 +7,7 @@ export default function NavMenu({ items, action, menuSelected, className }) {
   const [walletAddress, setWalletAddress] = useState(null);
   const {
     state: { accounts },
+    connectWallet,
   } = useEth();
 
   useEffect(() => {
@@ -34,7 +35,9 @@ export default function NavMenu({ items, action, menuSelected, className }) {
             {walletAddress}
           </div>
         ) : (
-          <button className="py-1 px-2 rounded shadow-purple-100 bg-indigo-500 hover:bg-indigo-600 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+          <button
+            className="py-1 px-2 rounded shadow-purple-100 bg-indigo-500 hover:bg-indigo-600 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+            onClick={() => connectWallet()}>
             Connect Wallet
           </button>
         )}

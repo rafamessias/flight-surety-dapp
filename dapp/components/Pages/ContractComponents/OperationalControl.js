@@ -16,14 +16,13 @@ const fields = [
 export default function OperationalControl() {
   const {
     state: { contractData, accounts, isOperational },
+    dispatch,
   } = useEth();
-
   const account = accounts ? accounts[0] : "";
 
   const [controlFields, setControlFields] = useState(fields);
 
   useEffect(() => {
-    console.log(isOperational);
     setControlFields((prev) =>
       prev.map((field) => ({
         ...field,
@@ -33,21 +32,24 @@ export default function OperationalControl() {
   }, [isOperational]);
 
   const submitAction = async (data) => {
-    console.log(data, account);
-
     try {
       const result = await contractData.methods
         .setOperatingStatus(data.set_contract_op)
         .send({ from: account });
       console.log(result);
+
+      dispatch({
+        type: "INIT",
+        data: { isOperational: data.set_contract_op },
+      });
     } catch (error) {
       console.log(error);
     }
   };
   return (
-    <Container>
+    <Container className="mt-10 min-w-80">
       <FormTemplate
-        title="Contract Operational Control"
+        title="Operational Control"
         submitAction={submitAction}
         submitTitle={null}
         fields={controlFields}
