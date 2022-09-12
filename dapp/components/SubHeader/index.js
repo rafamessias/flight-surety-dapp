@@ -1,6 +1,5 @@
 import useAppContext from "contexts/AppContext/useAppContext";
 import { useEth } from "contexts/EthContext";
-import { useEffect, useState } from "react";
 
 export default function SubHeader() {
   const { currentPage } = useAppContext();
