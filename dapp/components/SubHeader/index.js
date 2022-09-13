@@ -14,7 +14,7 @@ export default function SubHeader() {
       {currentPage.url === "/" && (
         <div className="flex items-center">
           {isOperational === null ? (
-            <div className="animate-pulse py-1 px-2 w-24 rounded bg-slate-100  text-xs font-light"></div>
+            <div className="animate-pulse py-1 px-2 w-24 h-6 rounded bg-slate-100  text-xs font-light"></div>
           ) : (
             <ShowContractStatus isOperational={isOperational} />
           )}

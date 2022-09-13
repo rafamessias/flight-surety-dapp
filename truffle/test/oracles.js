@@ -2,7 +2,7 @@ const Test = require("./config/testConfig.js");
 //const BigNumber = require('bignumber.js');
 
 contract("Oracles", async (accounts) => {
-  const TEST_ORACLES_COUNT = 20;
+  const TEST_ORACLES_COUNT = 4;
   var config;
   before("setup contract", async () => {
     config = await Test.Config(accounts);
@@ -52,33 +52,33 @@ contract("Oracles", async (accounts) => {
     // loop through all the accounts and for each account, all its Indexes (indices?)
     // and submit a response. The contract will reject a submission if it was
     // not requested so while sub-optimal, it's a good test of that feature
-    for (let a = 1; a < TEST_ORACLES_COUNT; a++) {
-      // Get oracle information
-      let oracleIndexes = await config.flightSuretyApp.getMyIndexes.call({
-        from: accounts[a],
-      });
-      for (let idx = 0; idx < 3; idx++) {
-        try {
-          // Submit a response...it will only be accepted if there is an Index match
-          await config.flightSuretyApp.submitOracleResponse(
-            oracleIndexes[idx],
-            config.firstAirline,
-            flight,
-            timestamp,
-            STATUS_CODE_ON_TIME,
-            { from: accounts[a] }
-          );
-        } catch (e) {
-          // Enable this when debugging
-          console.log(
-            "\nError",
-            idx,
-            oracleIndexes[idx].toNumber(),
-            flight,
-            timestamp
-          );
-        }
-      }
-    }
+    // for (let a = 1; a < TEST_ORACLES_COUNT; a++) {
+    //   // Get oracle information
+    //   let oracleIndexes = await config.flightSuretyApp.getMyIndexes.call({
+    //     from: accounts[a],
+    //   });
+    //   for (let idx = 0; idx < 3; idx++) {
+    //     try {
+    //       // Submit a response...it will only be accepted if there is an Index match
+    //       await config.flightSuretyApp.submitOracleResponse(
+    //         oracleIndexes[idx],
+    //         config.firstAirline,
+    //         flight,
+    //         timestamp,
+    //         STATUS_CODE_ON_TIME,
+    //         { from: accounts[a] }
+    //       );
+    //     } catch (e) {
+    //       // Enable this when debugging
+    //       console.log(
+    //         "\nError",
+    //         idx,
+    //         oracleIndexes[idx].toNumber(),
+    //         flight,
+    //         timestamp
+    //       );
+    //     }
+    //   }
+    // }
   });
 });

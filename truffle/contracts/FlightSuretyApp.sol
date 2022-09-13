@@ -15,7 +15,6 @@ interface IFlightSuretyData {
 
     function registerAirline(address _address, string calldata name)
         external
-        payable
         returns (bool success, uint256 votes);
 
     function getAirline(address _address)
@@ -145,7 +144,6 @@ contract FlightSuretyApp {
      */
     function registerAirline(address _address, string calldata name)
         external
-        payable
         returns (bool success, uint256 votes)
     {
         return flightSuretyData.registerAirline(_address, name);

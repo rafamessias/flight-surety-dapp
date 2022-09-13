@@ -1,5 +1,6 @@
 import Container from "components/Container";
 import FormTemplate from "components/FormTemplate";
+import { useEth } from "contexts/EthContext";
 
 const fields = [
   {
@@ -8,11 +9,35 @@ const fields = [
     type: "text",
     placeHolder: "e.g. 0x00",
   },
+  {
+    name: "airline_name",
+    title: "Airline Name",
+    type: "text",
+    placeHolder: "e.g. Delta Airlines",
+  },
 ];
 
 export default function RegisterAirlines() {
-  const submitAction = (data) => {
+  const {
+    state: { contract, accounts },
+  } = useEth();
+  const account = accounts ? accounts[0] : "";
+
+  const submitAction = async (data) => {
     console.log(data);
+
+    const { airline_address, airline_name } = data;
+    if (airline_address === "" || airline_name == "") return;
+
+    try {
+      // register airline, parameters: address, name
+      const result = await contract.methods
+        .registerAirline(airline_address, airline_name)
+        .send({ from: account });
+      console.log(result);
+    } catch (error) {
+      console.log(error);
+    }
   };
   return (
     <Container className="mt-10">

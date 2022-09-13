@@ -254,7 +254,6 @@ contract FlightSuretyData {
      */
     function registerAirline(address _address, string calldata name)
         external
-        payable
         requireIsOperational
         requireValidAddress(_address)
         requireAuthorizedCaller
