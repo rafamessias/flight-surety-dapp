@@ -44,8 +44,10 @@ export default function FormTemplate(props) {
                   id={field.name}
                   checked={field.value ? field.value : false}
                   onChange={(e) => {
-                    setValue(field.name, e.target.checked);
-                    !submitTitle ? handleSubmit(onSubmit)() : false;
+                    if (field.onChange) {
+                      setValue(field.name, e.target.checked);
+                      handleSubmit(onSubmit)();
+                    }
                   }}
                   className="appearance-none rounded p-2 cursor-pointer border-gray-300 focus:border-slate-500 focus:ring-slate-500 hover:border-slate-500 indeterminate:bg-gray-300 checked:bg-green-500 checked:hover:bg-green-500 checked:focus:bg-green-500 "
                   placeholder={field.placeHolder ? field.placeHolder : ""}

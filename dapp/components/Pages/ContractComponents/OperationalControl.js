@@ -2,6 +2,7 @@ import Container from "components/Container";
 import FormTemplate from "components/FormTemplate";
 import { useEth } from "contexts/EthContext";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 const fields = [
   {
@@ -10,13 +11,13 @@ const fields = [
     type: "checkbox",
     placeHolder: "",
     value: null,
+    onChange: true,
   },
   {
     name: "authorized_caller",
     title: "Authorized Caller",
     type: "text",
     placeHolder: "0x000",
-    value: "",
   },
 ];
 
@@ -58,6 +59,8 @@ export default function OperationalControl() {
       const result = await contractData.methods
         .authorizeCaller(authorized_caller)
         .send({ from: account });
+      toast.success("New Authorized caller successfully added");
+
       console.log(result);
     } catch (error) {
       console.log(error);
@@ -68,15 +71,18 @@ export default function OperationalControl() {
     //set contract operational
     try {
       const result = await contractData.methods
-        .setOperatingStatus(data.set_contract_op)
+        .setOperatingStatus(set_contract_op)
         .send({ from: account });
+
+      toast.info(`Contract Operational is ${set_contract_op}`);
       console.log(result);
 
       dispatch({
         type: "INIT",
-        data: { isOperational: data.set_contract_op },
+        data: { isOperational: set_contract_op },
       });
     } catch (error) {
+      toast.error("Error while set contract Operational status");
       console.log(error);
     }
   }

@@ -1,6 +1,7 @@
 import Container from "components/Container";
 import FormTemplate from "components/FormTemplate";
 import { useEth } from "contexts/EthContext";
+import { toast } from "react-toastify";
 
 const fields = [
   {
@@ -27,7 +28,7 @@ export default function RegisterAirlines() {
     console.log(data);
 
     const { airline_address, airline_name } = data;
-    if (airline_address === "" || airline_name == "") return;
+    if (airline_address === "" || airline_name === "") return;
 
     try {
       // register airline, parameters: address, name
@@ -35,7 +36,9 @@ export default function RegisterAirlines() {
         .registerAirline(airline_address, airline_name)
         .send({ from: account });
       console.log(result);
+      toast.success(`Airline successfuly registered`);
     } catch (error) {
+      toast.error("Could not register the Airline");
       console.log(error);
     }
   };
