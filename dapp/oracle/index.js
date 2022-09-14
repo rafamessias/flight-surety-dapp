@@ -1,18 +1,8 @@
 const FlightSuretyApp = require("../contracts/FlightSuretyApp.json");
 const Web3 = require("web3");
-const http = require("http");
 
 console.log("#### ORACLE - INIT");
 oracle();
-
-const server = http.createServer((req, res) => {
-  res.writeHead(200);
-  res.end("Oracle server is running");
-});
-server.listen(8080, () => {
-  console.log("Oracle server is up");
-});
-
 console.log("#### ORACLE - UP AND RUINNING");
 
 async function oracle() {

@@ -18,11 +18,6 @@ const items = [
     label: "Flights",
     url: "/flights",
   },
-  {
-    id: 2,
-    label: "Customer",
-    url: "/customer",
-  },
 ];
 
 export default function Header() {

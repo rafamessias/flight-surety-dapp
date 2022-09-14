@@ -13,10 +13,6 @@ const items = [
     id: 1,
     label: "Airlines",
   },
-  {
-    id: 2,
-    label: "Oracles",
-  },
 ];
 
 export default function Home() {

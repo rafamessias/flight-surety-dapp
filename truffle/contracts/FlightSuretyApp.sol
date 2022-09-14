@@ -84,6 +84,15 @@ contract FlightSuretyApp {
         bytes32 flight;
     }
 
+    // Events
+
+    event FlightRegistration(
+        bytes32 indexed id,
+        string Flight,
+        uint256 UpdatedTimestamp,
+        address Airline
+    );
+
     /********************************************************************************************/
     /*                                       FUNCTION MODIFIERS                                 */
     /********************************************************************************************/
@@ -201,12 +210,15 @@ contract FlightSuretyApp {
         uint256 _updatedTimestamp,
         address _airline
     ) external returns (bytes32) {
-        return
-            flightSuretyData.registerFlight(
-                _flight,
-                _updatedTimestamp,
-                _airline
-            );
+        bytes32 id = flightSuretyData.registerFlight(
+            _flight,
+            _updatedTimestamp,
+            _airline
+        );
+
+        emit FlightRegistration(id, _flight, _updatedTimestamp, _airline);
+
+        return id;
     }
 
     function getFlight(
