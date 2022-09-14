@@ -1,0 +1,17 @@
+{
+  "name": "oracle-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node ./index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@truffle/hdwallet-provider": "^2.0.14",
+    "dotenv": "^16.0.2",
+    "web3": "^1.8.0",
+    "web3-providers-ws": "^1.8.0"
+  }
+}

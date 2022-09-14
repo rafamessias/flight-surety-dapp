@@ -112,7 +112,7 @@ export default function FormTemplate(props) {
           {secondAction && (
             <button
               type="button"
-              className="inline-flex justify-center rounded-md border border-indigo-600 py-2 px-4 text-sm font-medium text-indigo-600 shadow-sm hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 mr-3"
+              className="inline-flex justify-center rounded-md border border-transparent py-2 px-4 text-sm font-medium text-indigo-600 hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 mr-3"
               onClick={() => handleSubmit(secondSubmit)()}>
               {secondTitle}
             </button>

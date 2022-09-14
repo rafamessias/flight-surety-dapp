@@ -1,5 +1,6 @@
 # Dependencies
 dapp/node_modules
+oracle-server/node_modules
 truffle/node_modules
 .pnp
 .pnp.js
