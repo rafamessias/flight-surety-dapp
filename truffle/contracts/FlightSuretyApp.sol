@@ -64,6 +64,13 @@ interface IFlightSuretyData {
         external
         view
         returns (CustomerInfo[] memory);
+
+    function processFlightStatus(
+        address airline,
+        string calldata flight,
+        uint256 timestamp,
+        uint8 statusCode
+    ) external;
 }
 
 /************************************************** */
@@ -276,7 +283,14 @@ contract FlightSuretyApp {
         string calldata flight,
         uint256 timestamp,
         uint8 statusCode
-    ) internal pure {}
+    ) internal {
+        flightSuretyData.processFlightStatus(
+            airline,
+            flight,
+            timestamp,
+            statusCode
+        );
+    }
 
     // Generate a request for oracles to fetch flight information
     function fetchFlightStatus(
@@ -308,7 +322,7 @@ contract FlightSuretyApp {
     uint256 public constant REGISTRATION_FEE = 1 ether;
 
     // Number of oracles that must respond for valid status
-    uint256 private constant MIN_RESPONSES = 3;
+    uint256 private constant MIN_RESPONSES = 1;
 
     struct Oracle {
         bool isRegistered;

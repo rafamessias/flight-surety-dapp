@@ -6,6 +6,33 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import truncateEthAddress from "truncate-eth-address";
 
+const flightStatusCode = [
+  {
+    id: 0,
+    label: "STATUS_CODE_UNKNOWN",
+  },
+  {
+    id: 10,
+    label: "STATUS_CODE_ON_TIME",
+  },
+  {
+    id: 20,
+    label: "STATUS_CODE_LATE_AIRLINE",
+  },
+  {
+    id: 30,
+    label: "STATUS_CODE_LATE_WEATHER",
+  },
+  {
+    id: 40,
+    label: "STATUS_CODE_LATE_TECHNICAL",
+  },
+  {
+    id: 50,
+    label: "STATUS_CODE_LATE_OTHER",
+  },
+];
+
 export default function BuyInsurance() {
   const [fields, setFields] = useState([
     {
@@ -13,6 +40,7 @@ export default function BuyInsurance() {
       title: "Available Flights",
       type: "select",
       options: [],
+      callFunction: true,
     },
     {
       name: "eths",
@@ -23,6 +51,7 @@ export default function BuyInsurance() {
   ]);
 
   const [insurances, setInsurances] = useState([]);
+  const [flightStatus, setFlightStatus] = useState([]);
 
   const {
     state: { contract, accounts, web3 },
@@ -55,6 +84,9 @@ export default function BuyInsurance() {
                       value: `${e.returnValues[1]};${e.returnValues[2]};${e.returnValues[3]}`,
                     };
                   });
+                  if (field.callFunction) {
+                    field.callFunction = getFlightStatus;
+                  }
                 }
 
                 return field;
@@ -84,9 +116,31 @@ export default function BuyInsurance() {
     getPurchasedInsurances();
   }, [contract]);
 
+  const getFlightStatus = async (data) => {
+    try {
+      const flightInfo = data.split(";");
+
+      if (!contract) return;
+      const result = await contract.methods
+        .getFlight(flightInfo[0], flightInfo[1], flightInfo[2])
+        .call();
+
+      setFlightStatus(Object.values(result));
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const transformStatusCode = (statusCode) => {
+    const status = flightStatusCode.filter(
+      (item) => item.id === Number(statusCode)
+    )[0];
+
+    return `${status.label}: ${status.id}`;
+  };
+
   const fetchFlightStatus = async (data) => {
-    console.log(data);
-    const { flight, eths } = data;
+    const { flight } = data;
 
     if (flight === "") return;
     const flightInfo = flight.split(";");
@@ -124,18 +178,47 @@ export default function BuyInsurance() {
   };
 
   return (
-    <Container>
-      <FormTemplate
-        title="Buy Insurance"
-        submitAction={submitAction}
-        submitTitle="BUY NOW!"
-        secondAction={fetchFlightStatus}
-        secondTitle="CALL ORACLE"
-        fields={fields}>
-        {insurances && (
-          <ListItems items={insurances} title="My Purchased Insurances" />
-        )}
-      </FormTemplate>
-    </Container>
+    <div className="md:flex">
+      <Container>
+        <FormTemplate
+          title="Buy Insurance"
+          submitAction={submitAction}
+          submitTitle="BUY NOW!"
+          secondAction={fetchFlightStatus}
+          secondTitle="CALL ORACLE"
+          fields={fields}>
+          {insurances && (
+            <ListItems items={insurances} title="My Purchased Insurances" />
+          )}
+        </FormTemplate>
+      </Container>
+      <div className="mt-4 md:mt-0 md:ml-4 py-2 px-4">
+        <h1 className="text-xl font-medium text-gray-700">Flight Status</h1>
+        <div className="mt-4">
+          <ul>
+            {flightStatus.map((item, idx) => (
+              <li className="mt-3" key={idx}>
+                <h4 className="text-sm text-gray-400 font-semibold uppercase">
+                  {idx === 0 && "Flight Key"}
+                  {idx === 1 && "Airline"}
+                  {idx === 2 && "Flight"}
+                  {idx === 3 && "Updated Timestamp"}
+                  {idx === 4 && "Is Registered"}
+                  {idx === 5 && "Status Code"}
+                </h4>
+                <h5 className="text-base text-gray-700">
+                  {idx === 0 && truncateEthAddress(item)}
+                  {idx === 1 && truncateEthAddress(item)}
+                  {idx === 2 && item}
+                  {idx === 3 && new Date(Number(item)).toDateString()}
+                  {idx === 4 && (item ? "TRUE" : "FALSE")}
+                  {idx === 5 && transformStatusCode(item)}
+                </h5>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
   );
 }

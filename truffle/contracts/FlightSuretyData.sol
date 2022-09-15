@@ -148,6 +148,22 @@ contract FlightSuretyData {
         _;
     }
 
+    /**
+    @dev require status code be one of the following
+    */
+    modifier requireValidateStatus(uint8 _status) {
+        require(
+            _status == STATUS_CODE_UNKNOWN ||
+                _status == STATUS_CODE_ON_TIME ||
+                _status == STATUS_CODE_LATE_AIRLINE ||
+                _status == STATUS_CODE_LATE_WEATHER ||
+                _status == STATUS_CODE_LATE_TECHNICAL ||
+                _status == STATUS_CODE_LATE_OTHER,
+            "Status code unknown"
+        );
+        _;
+    }
+
     /********************************************************************************************/
     /*                                       UTILITY FUNCTIONS                                  */
     /********************************************************************************************/
@@ -433,10 +449,33 @@ contract FlightSuretyData {
         return (customers[_customer]);
     }
 
+    // Process flight status from Oracle to update it
+
+    function processFlightStatus(
+        address airline,
+        string calldata flight,
+        uint256 timestamp,
+        uint8 statusCode
+    ) external requireValidateStatus(statusCode) {
+        bytes32 flightKey = getFlightKey(airline, flight, timestamp);
+
+        flights[flightKey].statusCode = statusCode;
+
+        if (statusCode > 10) {
+            creditInsurees(flightKey);
+        }
+    }
+
     /**
      *  @dev Credits payouts to insurees
      */
-    function creditInsurees() external pure {}
+    function creditInsurees(bytes32 _flight) internal {
+        for (uint8 x = 0; x < flights[_flight].customers.length; x++) {
+            flights[_flight].customers[x].fund = 1.5 ether;
+            //add loop to add fund
+            customers[flights[_flight].customers[x].customer].fund = 1.5 ether;
+        }
+    }
 
     /**
      *  @dev Transfers eligible payout funds to insuree

@@ -63,6 +63,11 @@ export default function FormTemplate(props) {
                       name={field.name}
                       id={field.name}
                       value={field.value}
+                      onChange={(e) => {
+                        if (field.callFunction) {
+                          field.callFunction(e.target.value);
+                        }
+                      }}
                       className="block w-full flex-1 rounded border-gray-300 cursor-pointer focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                       <option hidden>Select one...</option>
                       {field.options.map((option) => (
