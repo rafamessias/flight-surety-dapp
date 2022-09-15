@@ -469,7 +469,7 @@ contract FlightSuretyData {
     /**
      *  @dev Credits payouts to insurees
      */
-    function creditInsurees(bytes32 _flight) internal {
+    function creditInsurees(bytes32 _flight) internal requireAuthorizedCaller {
         Customer[] memory flightCustomers = flights[_flight].customers;
 
         for (uint8 x = 0; x < flightCustomers.length; x++) {
@@ -496,7 +496,39 @@ contract FlightSuretyData {
      *  @dev Transfers eligible payout funds to insuree
      *
      */
-    function pay() external pure {}
+    function pay(bytes32 _flight, address _customer)
+        external
+        requireValidAddress(_customer)
+        requireAuthorizedCaller
+    {
+        Customer[] memory flightCustomers = flights[_flight].customers;
+
+        for (uint8 x = 0; x < flightCustomers.length; x++) {
+            //add loop to add fund
+            for (
+                uint8 y = 0;
+                x < customers[flights[_flight].customers[x].customer].length;
+                y++
+            ) {
+                if (
+                    customers[flights[_flight].customers[x].customer][y]
+                        .flight == _flight
+                ) {
+                    address payable customer = payable(_customer);
+                    customers[flights[_flight].customers[x].customer][y]
+                        .fund = 0;
+                    flights[_flight].customers[x].fund = 0;
+
+                    customer.transfer(
+                        customers[flights[_flight].customers[x].customer][y]
+                            .fund
+                    );
+
+                    break;
+                }
+            }
+        }
+    }
 
     /**
      * @dev Initial funding for the insurance. Unless there are too many delayed flights

@@ -113,7 +113,7 @@ export default function FormTemplate(props) {
       </div>
 
       {submitTitle && (
-        <div className="bg-gray-50 px-4 py-3 text-right sm:px-6 rounded-br rounded-bl">
+        <div className="bottom-0 bg-gray-50 px-4 py-3 text-right sm:px-6 rounded-br rounded-bl">
           {secondAction && (
             <button
               type="button"

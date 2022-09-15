@@ -71,6 +71,8 @@ interface IFlightSuretyData {
         uint256 timestamp,
         uint8 statusCode
     ) external;
+
+    function pay(bytes32 _flight, address _customer) external;
 }
 
 /************************************************** */
@@ -309,6 +311,11 @@ contract FlightSuretyApp {
         oracleResponses[key].isOpen = true;
 
         emit OracleRequest(index, airline, flight, timestamp);
+    }
+
+    //withdraw insurance
+    function withdraw(bytes32 _flight) external {
+        flightSuretyData.pay(_flight, msg.sender);
     }
 
     /********************************************************************************************/

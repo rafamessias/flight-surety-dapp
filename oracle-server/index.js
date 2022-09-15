@@ -44,10 +44,10 @@ async function oracle() {
   console.log("Registering Oracles");
   try {
     for (let a = 10; a < TEST_ORACLES_COUNT; a++) {
-      // await contract.methods.registerOracle().send({
-      //   from: accounts[a],
-      //   value: FEE,
-      // });
+      await contract.methods.registerOracle().send({
+        from: accounts[a],
+        value: FEE,
+      });
 
       const result = await contract.methods.getMyIndexes().call({
         from: accounts[a],

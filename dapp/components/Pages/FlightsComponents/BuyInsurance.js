@@ -190,7 +190,7 @@ export default function BuyInsurance() {
 
   return (
     <div className="md:flex">
-      <Container className="max-h-fit">
+      <Container className="h-full">
         <FormTemplate
           title="Buy Insurance"
           submitAction={submitAction}
