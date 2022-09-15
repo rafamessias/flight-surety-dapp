@@ -470,10 +470,25 @@ contract FlightSuretyData {
      *  @dev Credits payouts to insurees
      */
     function creditInsurees(bytes32 _flight) internal {
-        for (uint8 x = 0; x < flights[_flight].customers.length; x++) {
+        Customer[] memory flightCustomers = flights[_flight].customers;
+
+        for (uint8 x = 0; x < flightCustomers.length; x++) {
             flights[_flight].customers[x].fund = 1.5 ether;
             //add loop to add fund
-            customers[flights[_flight].customers[x].customer].fund = 1.5 ether;
+            for (
+                uint8 y = 0;
+                x < customers[flights[_flight].customers[x].customer].length;
+                y++
+            ) {
+                if (
+                    customers[flights[_flight].customers[x].customer][y]
+                        .flight == _flight
+                ) {
+                    customers[flights[_flight].customers[x].customer][y]
+                        .fund = 1.5 ether;
+                    break;
+                }
+            }
         }
     }
 

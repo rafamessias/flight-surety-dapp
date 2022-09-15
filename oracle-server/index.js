@@ -25,8 +25,11 @@ async function oracle() {
   console.log("#### ORACLE - INIT");
 
   const providerURL = "http://127.0.0.1:7545";
+
+  console.log("Getting Contract and Accounts");
   const { contract, accounts } = await flightContract(providerURL);
 
+  console.log("Getting Contract to watch");
   const watchContract = await eventsContract(providerURL);
 
   let oraclesArr = [];
@@ -36,23 +39,30 @@ async function oracle() {
     from: accounts[0],
   });
 
-  const TEST_ORACLES_COUNT = 2;
+  const TEST_ORACLES_COUNT = 16;
 
-  for (let a = 0; a < TEST_ORACLES_COUNT; a++) {
-    await contract.methods.registerOracle().send({
-      from: accounts[a],
-      value: FEE,
-    });
+  console.log("Registering Oracles");
+  try {
+    for (let a = 10; a < TEST_ORACLES_COUNT; a++) {
+      // await contract.methods.registerOracle().send({
+      //   from: accounts[a],
+      //   value: FEE,
+      // });
 
-    const result = await contract.methods.getMyIndexes().call({
-      from: accounts[a],
-    });
+      const result = await contract.methods.getMyIndexes().call({
+        from: accounts[a],
+      });
 
-    oraclesArr.push({
-      indexes: result,
-      address: accounts[a],
-    });
-    console.log(`Oracle Registered: ${result[0]}, ${result[1]}, ${result[2]}`);
+      oraclesArr.push({
+        indexes: result,
+        address: accounts[a],
+      });
+      console.log(
+        `Oracle Registered: ${result[0]}, ${result[1]}, ${result[2]}`
+      );
+    }
+  } catch (error) {
+    console.log(error);
   }
 
   //##### Watch Oracle Request events
@@ -82,8 +92,6 @@ async function oracle() {
               from: oraclesArr[x].address,
             });
 
-          console.log(result);
-
           console.log(
             `Oracle response submitted! ${eventRequest.index} ${eventRequest.flight} - status: ${statusCode[randomStatusIndex]}`
           );
@@ -101,6 +109,8 @@ async function flightContract(providerURL) {
     mnemonic: MNEMONIC,
     providerOrUrl: providerURL,
     numberOfAddresses: 40,
+    networkCheckTimeout: 10000000000000,
+    timeoutBlocks: 200000,
   });
 
   const web3 = new Web3(provider);

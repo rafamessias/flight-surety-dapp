@@ -94,6 +94,16 @@ export default function BuyInsurance() {
           );
         }
       );
+
+      //Updated purchase
+      contract.events
+        .FlightStatusInfo({})
+        .on("connected", (subID) => {
+          console.log(`FlightStatusInfo - SubID: ${subID}`);
+        })
+        .on("data", async (event) => {
+          getPurchasedInsurances();
+        });
     } catch (error) {
       console.log(error);
     }
@@ -169,17 +179,18 @@ export default function BuyInsurance() {
         .buyInsurance(flightInfo[0], flightInfo[1], flightInfo[2])
         .send({ from: account, value: web3.utils.toWei(eths, "ether") });
 
-      toast.success("Flight successfully registered");
+      getPurchasedInsurances();
+      toast.success("Purchase successfully registered");
       console.log(result);
     } catch (error) {
-      toast.error("Error while trying to regiter the Flight");
+      toast.error("Error while trying to purchase the insurance");
       console.log(error);
     }
   };
 
   return (
     <div className="md:flex">
-      <Container>
+      <Container className="max-h-fit">
         <FormTemplate
           title="Buy Insurance"
           submitAction={submitAction}
