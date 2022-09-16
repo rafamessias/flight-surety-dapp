@@ -203,6 +203,7 @@ contract FlightSuretyData {
      */
     function setmultiPartyConsensusThreshold(uint8 _consensusCount)
         external
+        requireIsOperational
         requireContractOwner
     {
         require(
@@ -378,6 +379,7 @@ contract FlightSuretyData {
         address _airline
     )
         external
+        requireIsOperational
         requireValidAddress(_airline)
         requireAuthorizedAirline(_airline)
         requireAuthorizedCaller
@@ -424,6 +426,7 @@ contract FlightSuretyData {
     function buy(bytes32 _flight, address _customer)
         external
         payable
+        requireIsOperational
         requireValidAddress(_customer)
         requireAuthorizedCaller
         returns (bool)
@@ -456,7 +459,7 @@ contract FlightSuretyData {
         string calldata flight,
         uint256 timestamp,
         uint8 statusCode
-    ) external requireValidateStatus(statusCode) {
+    ) external requireIsOperational requireValidateStatus(statusCode) {
         bytes32 flightKey = getFlightKey(airline, flight, timestamp);
 
         flights[flightKey].statusCode = statusCode;
@@ -499,6 +502,7 @@ contract FlightSuretyData {
     function pay(bytes32 _flight, address _customer)
         external
         payable
+        requireIsOperational
         requireValidAddress(_customer)
         requireAuthorizedCaller
     {
