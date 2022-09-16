@@ -9,7 +9,7 @@ contract FlightSuretyData {
     address private contractOwner; // Account used to deploy contract
     bool private operational = true; // Blocks all state changes throughout the contract if false
 
-    uint256 airlineFund = 0.000001 ether;
+    uint256 airlineFund = 10 ether;
 
     mapping(address => bool) private authorizedCallers; //who can call this contract
 
@@ -498,6 +498,7 @@ contract FlightSuretyData {
      */
     function pay(bytes32 _flight, address _customer)
         external
+        payable
         requireValidAddress(_customer)
         requireAuthorizedCaller
     {
@@ -515,14 +516,12 @@ contract FlightSuretyData {
                         .flight == _flight
                 ) {
                     address payable customer = payable(_customer);
+                    uint256 customerFund = flights[_flight].customers[x].fund;
                     customers[flights[_flight].customers[x].customer][y]
                         .fund = 0;
                     flights[_flight].customers[x].fund = 0;
 
-                    customer.transfer(
-                        customers[flights[_flight].customers[x].customer][y]
-                            .fund
-                    );
+                    customer.transfer(customerFund);
 
                     break;
                 }

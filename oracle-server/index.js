@@ -39,7 +39,7 @@ async function oracle() {
     from: accounts[0],
   });
 
-  const TEST_ORACLES_COUNT = 16;
+  const TEST_ORACLES_COUNT = 20;
 
   console.log("Registering Oracles");
   try {

@@ -86,7 +86,7 @@ contract FlightSuretyApp {
     address private contractOwner; // Account used to deploy contract
     IFlightSuretyData private flightSuretyData;
 
-    uint256 minInsuranceFund = 0.000001 ether;
+    uint256 maxInsuranceFund = 1 ether;
 
     struct CustomerInfo {
         uint256 fund;
@@ -258,7 +258,10 @@ contract FlightSuretyApp {
         uint256 _updatedTimestamp,
         address _airline
     ) external payable returns (bool) {
-        require(msg.value >= minInsuranceFund, "Minimum fund not provided");
+        require(
+            msg.value <= maxInsuranceFund,
+            "Cannot purchase more than the Max fund"
+        );
 
         return
             flightSuretyData.buy{value: msg.value}(
@@ -314,7 +317,7 @@ contract FlightSuretyApp {
     }
 
     //withdraw insurance
-    function withdraw(bytes32 _flight) external {
+    function withdraw(bytes32 _flight) external payable {
         flightSuretyData.pay(_flight, msg.sender);
     }
 
@@ -329,7 +332,7 @@ contract FlightSuretyApp {
     uint256 public constant REGISTRATION_FEE = 1 ether;
 
     // Number of oracles that must respond for valid status
-    uint256 private constant MIN_RESPONSES = 1;
+    uint256 private constant MIN_RESPONSES = 3;
 
     struct Oracle {
         bool isRegistered;

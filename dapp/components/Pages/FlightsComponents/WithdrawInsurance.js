@@ -46,6 +46,8 @@ export default function WithdrawInsurance() {
   };
 
   const updateCombo = () => {
+    if (!contract) return;
+
     //Updated purchase
     contract.events
       .FlightStatusInfo({})
